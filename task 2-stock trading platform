@@ -1,0 +1,153 @@
+import java.util.*;
+
+// Represents a single stock and its current market price
+class Stock {
+    String symbol;
+    double price;
+
+    public Stock(String symbol, double price) {
+        this.symbol = symbol;
+        this.price = price;
+    }
+}
+
+// Represents the user's holding for a particular stock
+class Holding {
+    String symbol;
+    int quantity;
+    double avgPrice;
+
+    public Holding(String symbol, int quantity, double avgPrice) {
+        this.symbol = symbol;
+        this.quantity = quantity;
+        this.avgPrice = avgPrice;
+    }
+}
+
+// Main platform class containing the main() method
+public class StockTradingPlatform {
+    static Map<String, Stock> market = new HashMap<>();
+    static Map<String, Holding> portfolio = new HashMap<>();
+    static double balance = 10000;
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        initMarket();
+
+        while (true) {
+            System.out.println("\n--- Stock Trading Platform ---");
+            System.out.println("1. View Market");
+            System.out.println("2. Buy Stock");
+            System.out.println("3. Sell Stock");
+            System.out.println("4. View Portfolio");
+            System.out.println("5. Exit");
+            System.out.print("Select option: ");
+            int choice = scanner.nextInt();
+
+            switch (choice) {
+                case 1 -> viewMarket();
+                case 2 -> buyStock(scanner);
+                case 3 -> sellStock(scanner);
+                case 4 -> viewPortfolio();
+                case 5 -> {
+                    System.out.println("Exiting... Happy trading!");
+                    return;
+                }
+                default -> System.out.println("Invalid option. Try again.");
+            }
+        }
+    }
+
+    // Initializes market with some sample stocks
+    static void initMarket() {
+        market.put("AAPL", new Stock("AAPL", 150.00));
+        market.put("GOOG", new Stock("GOOG", 2800.00));
+        market.put("TSLA", new Stock("TSLA", 700.00));
+        market.put("AMZN", new Stock("AMZN", 3300.00));
+    }
+
+    static void viewMarket() {
+        System.out.println("\nMarket Data:");
+        for (Stock stock : market.values()) {
+            System.out.printf("%s: $%.2f%n", stock.symbol, stock.price);
+        }
+    }
+
+    static void buyStock(Scanner scanner) {
+        System.out.print("Enter stock symbol to buy: ");
+        String symbol = scanner.next().toUpperCase();
+        if (!market.containsKey(symbol)) {
+            System.out.println("Stock not found.");
+            return;
+        }
+
+        System.out.print("Enter quantity to buy: ");
+        int qty = scanner.nextInt();
+        if (qty <= 0) {
+            System.out.println("Quantity must be positive.");
+            return;
+        }
+
+        Stock stock = market.get(symbol);
+        double cost = qty * stock.price;
+
+        if (cost > balance) {
+            System.out.println("Insufficient balance.");
+            return;
+        }
+
+        balance -= cost;
+        Holding hold = portfolio.getOrDefault(symbol, new Holding(symbol, 0, 0));
+        double newAvg = ((hold.avgPrice * hold.quantity) + cost) / (hold.quantity + qty);
+        portfolio.put(symbol, new Holding(symbol, hold.quantity + qty, newAvg));
+
+        System.out.printf("Bought %d shares of %s for $%.2f. New Balance: $%.2f%n", qty, symbol, cost, balance);
+    }
+
+    static void sellStock(Scanner scanner) {
+        System.out.print("Enter stock symbol to sell: ");
+        String symbol = scanner.next().toUpperCase();
+        if (!portfolio.containsKey(symbol)) {
+            System.out.println("You don't own this stock.");
+            return;
+        }
+
+        Holding hold = portfolio.get(symbol);
+        System.out.print("Enter quantity to sell: ");
+        int qty = scanner.nextInt();
+
+        if (qty <= 0 || qty > hold.quantity) {
+            System.out.println("Invalid quantity.");
+            return;
+        }
+
+        double sellValue = qty * market.get(symbol).price;
+        balance += sellValue;
+        int remainingQty = hold.quantity - qty;
+
+        if (remainingQty == 0) {
+            portfolio.remove(symbol);
+        } else {
+            portfolio.put(symbol, new Holding(symbol, remainingQty, hold.avgPrice));
+        }
+
+        System.out.printf("Sold %d shares of %s for $%.2f. New Balance: $%.2f%n", qty, symbol, sellValue, balance);
+    }
+
+    static void viewPortfolio() {
+        System.out.println("\nYour Portfolio:");
+        if (portfolio.isEmpty()) {
+            System.out.println("No holdings yet.");
+        } else {
+            for (Holding hold : portfolio.values()) {
+                double currentPrice = market.get(hold.symbol).price;
+                double value = currentPrice * hold.quantity;
+                double profitLoss = (currentPrice - hold.avgPrice) * hold.quantity;
+
+                System.out.printf("%s - Qty: %d, Avg Buy: $%.2f, Current: $%.2f, Value: $%.2f, P/L: $%.2f%n",
+                        hold.symbol, hold.quantity, hold.avgPrice, currentPrice, value, profitLoss);
+            }
+        }
+        System.out.printf("Available Balance: $%.2f%n", balance);
+    }
+}
