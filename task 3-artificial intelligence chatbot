@@ -1,0 +1,42 @@
+import java.util.*;
+
+public class AIChatbot {
+    static Scanner scanner = new Scanner(System.in);
+    static Map<String, String> knowledgeBase = new HashMap<>();
+
+    public static void main(String[] args) {
+        initKnowledgeBase();
+
+        System.out.println("🤖 AI Chatbot: Hello! Ask me anything. Type 'bye' to exit.");
+        while (true) {
+            System.out.print("You: ");
+            String userInput = scanner.nextLine().toLowerCase();
+
+            if (userInput.contains("bye")) {
+                System.out.println("🤖 AI Chatbot: Goodbye!");
+                break;
+            }
+
+            String response = getResponse(userInput);
+            System.out.println("🤖 AI Chatbot: " + response);
+        }
+    }
+
+    static void initKnowledgeBase() {
+        knowledgeBase.put("hello", "Hi there! How can I help you?");
+        knowledgeBase.put("how are you", "I'm just a bot, but I'm doing great! Thanks for asking.");
+        knowledgeBase.put("your name", "I'm an AI Chatbot.");
+        knowledgeBase.put("what is ai", "AI stands for Artificial Intelligence. It's the simulation of human intelligence by machines.");
+        knowledgeBase.put("what is machine learning", "Machine Learning is a branch of AI that allows systems to learn from data.");
+        knowledgeBase.put("thanks", "You're welcome!");
+    }
+
+    static String getResponse(String input) {
+        for (String key : knowledgeBase.keySet()) {
+            if (input.contains(key)) {
+                return knowledgeBase.get(key);
+            }
+        }
+        return "Sorry, I don't understand that yet. Can you ask something else?";
+    }
+}
